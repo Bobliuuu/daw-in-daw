@@ -49,31 +49,56 @@ local function update_meters()
 end
 
 ----------------------------------------------------------------------------- MIDI audition through the virtual keyboard
-local armed, pending_off, pending_on = nil, {}, {}
+local armed, pending_off, pending_on, pending_check = nil, {}, {}, nil
 local VKB_INPUT = 4096 + 62 * 32   -- MIDI input: Virtual MIDI Keyboard, all channels
+-- (re)arm a MIDI track so the virtual keyboard reaches it. Returns true if the arming had to be (re)applied.
+local function arm_track(t)
+  -- never trust a cached flag: undo/redo restores track state and silently disarms the track
+  local live = r.GetMediaTrackInfo_Value(t.ptr, "I_RECARM") == 1 and r.GetMediaTrackInfo_Value(t.ptr, "I_RECMON") == 1
+    and r.GetMediaTrackInfo_Value(t.ptr, "I_RECINPUT") == VKB_INPUT
+  if armed == t.id and live then return false end
+  if armed and armed ~= t.id then
+    local o = P.track(armed)
+    if o and r.ValidatePtr2(0, o.ptr, "MediaTrack*") then r.SetMediaTrackInfo_Value(o.ptr, "I_RECARM", 0) r.SetMediaTrackInfo_Value(o.ptr, "I_RECMON", 0) end
+  end
+  r.SetMediaTrackInfo_Value(t.ptr, "I_RECINPUT", VKB_INPUT)
+  r.SetMediaTrackInfo_Value(t.ptr, "I_RECARM", 1)
+  r.SetMediaTrackInfo_Value(t.ptr, "I_RECMON", 1)
+  armed = t.id
+  return true
+end
+
 function A.audition(track_id, pitch, vel)
   local t = P.track(track_id)
   if not t or t.kind ~= "midi" or not r.ValidatePtr2(0, t.ptr, "MediaTrack*") then return end
   -- REAPER may close an idle audio device (pref: "close device when stopped & inactive"); monitoring needs it open
   if not r.Audio_IsRunning() then r.Audio_Init() end
-  -- never trust the cached flag: undo/redo restores track state and silently disarms the track
-  local live = r.GetMediaTrackInfo_Value(t.ptr, "I_RECARM") == 1 and r.GetMediaTrackInfo_Value(t.ptr, "I_RECMON") == 1
-    and r.GetMediaTrackInfo_Value(t.ptr, "I_RECINPUT") == VKB_INPUT
-  if armed ~= track_id or not live then
-    if armed and armed ~= track_id then local o = P.track(armed) if o and r.ValidatePtr2(0, o.ptr, "MediaTrack*") then r.SetMediaTrackInfo_Value(o.ptr, "I_RECARM", 0) r.SetMediaTrackInfo_Value(o.ptr, "I_RECMON", 0) end end
-    r.SetMediaTrackInfo_Value(t.ptr, "I_RECINPUT", VKB_INPUT)
-    r.SetMediaTrackInfo_Value(t.ptr, "I_RECARM", 1)
-    r.SetMediaTrackInfo_Value(t.ptr, "I_RECMON", 1)
-    armed = track_id
-    -- REAPER applies (re)arming asynchronously: a note sent in the same instant would be lost, so delay it a little
-    pending_on[#pending_on + 1] = { pitch = pitch, vel = vel or 100, t = G.now + 0.12 }
-    pending_off[#pending_off + 1] = { pitch = pitch, t = G.now + 0.12 + 0.25 }
+  if arm_track(t) then
+    -- arming is applied asynchronously by REAPER: a note sent in the same instant can be lost, so delay it (fallback path;
+    -- normally the track was already armed when it was selected)
+    pending_on[#pending_on + 1] = { pitch = pitch, vel = vel or 100, t = G.now + 0.2 }
+    pending_off[#pending_off + 1] = { pitch = pitch, t = G.now + 0.2 + 0.25 }
     return
   end
   r.StuffMIDIMessage(0, 0x90, pitch, vel or 100)
   pending_off[#pending_off + 1] = { pitch = pitch, t = G.now + 0.25 }
+  pending_check = { id = track_id, pitch = pitch, vel = vel or 100, t = G.now + 0.3, retried = false }
+end
+-- called every frame: keep the selected MIDI track armed ahead of time (cheap; only sets state when it is not live)
+function A.ensure_armed()
+  local t = S.sel_track and P.track(S.sel_track)
+  if t and t.kind == "midi" and r.ValidatePtr2(0, t.ptr, "MediaTrack*") then arm_track(t) end
 end
 local function service_audition()
+  -- REAPER applies (re)arming asynchronously and may drop the first note; if the track shows no level, resend once
+  if pending_check and G.now >= pending_check.t then
+    local pc = pending_check pending_check = nil
+    local m = meters[pc.id]
+    if m and m.l < 0.002 and m.r < 0.002 and not pc.retried then
+      r.StuffMIDIMessage(0, 0x90, pc.pitch, pc.vel)
+      pending_off[#pending_off + 1] = { pitch = pc.pitch, t = G.now + 0.25 }
+    end
+  end
   for i = #pending_on, 1, -1 do
     if G.now >= pending_on[i].t then r.StuffMIDIMessage(0, 0x90, pending_on[i].pitch, pending_on[i].vel) table.remove(pending_on, i) end
   end
@@ -476,6 +501,7 @@ function A.step()
   if S.edit_clip and not P.clip(S.edit_clip) then S.edit_clip = nil end
   if S.sel_track and not P.track(S.sel_track) then S.sel_track = nil end
   if not S.sel_track and #P.snap.tracks > 0 then S.sel_track = P.snap.tracks[1].id end
+  A.ensure_armed()
 
   local R = L.compute(G.W, G.H, S)
   A.R = R

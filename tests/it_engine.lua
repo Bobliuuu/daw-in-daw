@@ -130,6 +130,14 @@ local function build()
   T.eq("clip seconds scaled with tempo", P.clip(d3).time_pos, before_t * 120 / 90, 0.001)
   C.set_bpm(120) P.refresh(true)
 
+  -- time signature: musical clip positions and note data are unaffected
+  local H2 = require("host")
+  C.set_timesig(3, 4) P.refresh(true)
+  T.check("time signature set to 3/4", P.snap.num == 3 and P.snap.den == 4)
+  T.eq("clip start unchanged by signature change", P.clip(d3).start, 8, 0.001)
+  C.set_timesig(6, 8) P.refresh(true) T.check("6/8 accepted", P.snap.num == 6 and P.snap.den == 8)
+  C.set_timesig(4, 4) P.refresh(true) T.check("back to 4/4", P.snap.num == 4 and P.snap.den == 4)
+
   -- undo / redo
   local n0 = note_count(dc)
   C.insert_note(dc, 60, 2, 3, 100)

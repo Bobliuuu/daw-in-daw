@@ -14,11 +14,13 @@ function H.set_bpm(bpm)
   return bpm
 end
 
+-- one tempo/time-signature marker at time 0. Modifying an existing marker needs its explicit position (verified empirically:
+-- passing -1 for the position makes REAPER ignore the call).
 function H.set_timesig(num, den)
   local bpm = H.bpm()
-  local n = r.CountTempoTimeSigMarkers(0)
-  if n > 0 then
-    r.SetTempoTimeSigMarker(0, 0, -1, -1, -1, bpm, num, den, false)
+  local idx = r.FindTempoTimeSigMarker(0, 0)
+  if idx and idx >= 0 then
+    r.SetTempoTimeSigMarker(0, idx, 0, -1, -1, bpm, num, den, false)
   else
     r.SetTempoTimeSigMarker(0, -1, 0, -1, -1, bpm, num, den, false)
   end

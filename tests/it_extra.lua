@@ -131,7 +131,6 @@ local function phase_robust()
 
   -- audition: clicking a piano-roll key / placing a note sends MIDI through REAPER's virtual keyboard to the track
   local lead = P.snap.tracks[1]
-  TR.stop() r.SetEditCurPos(0, true, false)
   A.audition(lead.id, 69, 110)
   do local tt = P.track(lead.id) T.info(string.format("audition state: kind=%s inst=%s fxcount=%d arm=%d mon=%d in=%d mute=%d vol=%.2f playstate=%d audio_running=%s", tt.kind, tt.inst, #tt.fx, r.GetMediaTrackInfo_Value(tt.ptr, "I_RECARM"), r.GetMediaTrackInfo_Value(tt.ptr, "I_RECMON"), r.GetMediaTrackInfo_Value(tt.ptr, "I_RECINPUT"), r.GetMediaTrackInfo_Value(tt.ptr, "B_MUTE"), tt.vol, r.GetPlayState(), tostring(r.Audio_IsRunning()))) end
   local maxpk = 0

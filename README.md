@@ -56,15 +56,15 @@ or inside REAPER: *Actions → Show action list → New action → Load ReaScrip
 | **Arrangement:** double-click lane = new 1-bar clip · double-click clip = open · drag body/edges · right-click menus · drag the strip above the ruler = loop · click ruler = seek | **Piano roll:** click or drag = draw note · drag = move · drag right edge = resize · right-click = delete · `⇧`-drag = select · `⌘A` · `↑↓` transpose (`⇧` octave) · `←→` nudge · `Q` quantize |
 | Wheel scrolls · `⇧`+wheel horizontal · `⌘`/`Alt`+wheel zoom | Roll: wheel = pitch scroll · `Alt`+wheel = row height |
 
-## Tests - 600 automated checks, all green
+## Tests - 598 automated checks, all green
 
 ```bash
 lua tests/unit.lua            # 354 pure-Lua unit tests, no REAPER needed
-tools/run_all_tests.sh        # everything, incl. ~250 integration checks inside real REAPER  ->  docs/TEST_RESULTS.md
+tools/run_all_tests.sh        # everything, incl. 244 integration checks inside real REAPER  ->  docs/TEST_RESULTS.md
 tools/gui/gui_test.sh         # REAL OS mouse/keyboard events (needs macOS Accessibility permission, see docs/TESTING.md)
 ```
 See [docs/TESTING.md](docs/TESTING.md) and the generated [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md). The original go/no-go prototype
-checks (`tests/legacy/`) still pass. **Honest status of GUI testing:** the full 25-step song workflow, drags, keys, dialogs,
+checks (`tests/legacy/`) still pass. **Honest status of GUI testing:** the full song workflow (project → tracks → notes → arrangement → audio → mix → FX → loop/play → undo → save → export → reopen → resume), drags, keys, dialogs,
 docking and window resizing are exercised through the app's real frame loop with synthetic input, and the rendered framebuffer
 is inspected (screenshots below). Posting *OS-level* events needs a macOS permission that was not available in the build
 environment, so `gui_test.sh` was written but **has not been run to completion** - it refuses to report success when events are dropped.

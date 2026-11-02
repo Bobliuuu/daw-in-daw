@@ -65,6 +65,17 @@ local function build()
   D.key("backspace") D.type("Neon Drive") D.key("enter") refresh()
   T.eq("project renamed through prompt", P.snap.name, "Neon Drive")
 
+  -- tempo and time signature through the transport-bar widgets
+  local H = require("host")
+  D.click_id("bpm") D.frames(2) D.key("backspace") D.type("100") D.key("enter") refresh()
+  T.eq("BPM typed into the tempo prompt reaches REAPER", H.bpm(), 100, 0.01)
+  D.click_id("sig") D.click_popup("3/4") refresh()
+  local n_, d_ = H.timesig() T.check("time signature menu sets REAPER's signature", n_ == 3 and d_ == 4, n_ .. "/" .. d_)
+  D.frames(2) shot("01b_three_four")
+  D.click_id("sig") D.click_popup("4/4") refresh()
+  D.click_id("bpm") D.frames(2) D.key("backspace") D.type("120") D.key("enter") refresh()
+  n_, d_ = H.timesig() T.check("back to 4/4 at 120 BPM", n_ == 4 and d_ == 4 and math.abs(H.bpm() - 120) < 0.01, n_ .. "/" .. d_ .. " " .. H.bpm())
+
   -- 3-5. tracks
   local function add(label) D.click_id("addtrk") D.click_popup(label) refresh() end
   add("Drum Kit (sampler)") add("Bass Synth") add("Lead Synth") add("Audio track")
