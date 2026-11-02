@@ -80,4 +80,7 @@ function T.hit_note(notes, v, pv, x, y, rx, ry, edge_px)
   end
 end
 
+-- half-open interval overlap on a beat axis (touching clips do not overlap)
+function T.overlaps(a_s, a_e, b_s, b_e, eps) eps = eps or 1e-6 return a_s < b_e - eps and a_e > b_s + eps end
+
 return T

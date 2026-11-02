@@ -23,13 +23,16 @@ local function mutate(label, fn, ...)
   return a, b
 end
 
+-- ids created earlier inside the same (still open) gesture are not in the snapshot yet: refresh on a miss
 local function trk(id)
   local t = P.track(id)
+  if not t then P.touch() P.refresh(true) t = P.track(id) end
   if not t or not H.valid(t.ptr, "MediaTrack*") then error("track no longer exists: " .. tostring(id), 0) end
   return t, t.ptr
 end
 local function clp(id)
   local c = P.clip(id)
+  if not c then P.touch() P.refresh(true) c = P.clip(id) end
   if not c or not H.valid(c.ptr, "MediaItem*") then error("clip no longer exists: " .. tostring(id), 0) end
   return c, c.ptr
 end
@@ -57,6 +60,15 @@ function C.clear_project()
     for i = #kids, 1, -1 do r.DeleteTrack(kids[i]) end
     if root then r.DeleteTrack(root) end
   end)
+end
+
+-- called once when the app opens a project: re-link missing drum samples (non-undoable housekeeping)
+function C.repair_project()
+  local fixed = 0
+  for _, t in ipairs(P.snap.tracks) do
+    if t.inst == "Drum Kit" and H.valid(t.ptr, "MediaTrack*") then fixed = fixed + I.repair_kit(t.ptr, C.assets_dir, t.inst_count) end
+  end
+  return fixed
 end
 
 function C.set_name(name) return mutate("Rename project", function() r.SetProjExtState(0, "daw_in_daw", "name", name) end) end
@@ -134,7 +146,7 @@ end
 ----------------------------------------------------------------------------- clips
 local function overlaps(track, s, e, ignore_id)
   for _, c in ipairs(track.clips) do
-    if c.id ~= ignore_id and s < c.start + c.len - 1e-6 and e > c.start + 1e-6 then return c end
+    if c.id ~= ignore_id and TL.overlaps(s, e, c.start, c.start + c.len) then return c end
   end
 end
 C.overlaps = overlaps

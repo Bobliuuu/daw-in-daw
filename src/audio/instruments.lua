@@ -60,4 +60,23 @@ function I.install(tr, inst, asset_dir)
   return 1
 end
 
+
+-- Re-link drum-kit voices whose sample file went missing (project moved to another machine, file deleted...).
+-- Returns the number of voices restored. Never touches tracks it does not own.
+function I.repair_kit(tr, asset_dir, inst_count)
+  local fixed = 0
+  for i = 0, inst_count - 1 do
+    local _, name = r.TrackFX_GetNamedConfigParm(tr, i, "renamed_name")
+    local _, path = r.TrackFX_GetNamedConfigParm(tr, i, "FILE0")
+    for _, v in ipairs(G.KIT) do
+      if v.name == name and (path == nil or path == "" or not r.file_exists(path)) then
+        r.TrackFX_SetNamedConfigParm(tr, i, "FILE0", asset_dir .. "/drums/" .. v.file)
+        r.TrackFX_SetNamedConfigParm(tr, i, "DONE", "")
+        fixed = fixed + 1
+      end
+    end
+  end
+  return fixed
+end
+
 return I

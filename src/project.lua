@@ -115,6 +115,7 @@ local function build()
           local a, b = r.GetMediaSourceFileName(src, "")
           c.file = (b and b ~= "") and b or a
           c.src_len = r.GetMediaSourceLength(src)
+          c.offline = (c.file ~= nil and c.file ~= "" and not r.file_exists(c.file))
         end
       end
       t.clips[#t.clips + 1] = c

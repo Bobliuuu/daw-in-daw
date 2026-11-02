@@ -176,6 +176,14 @@ function A.export_now(opts)
   return res
 end
 
+-- new project while one exists: confirm, then remove ONLY the tracks the DAW owns
+function A.new_project_menu()
+  if not P.snap.has_root then A.new_project() return end
+  G.confirm("Start a new project? This removes the DAW tracks and clips of '" .. (P.snap.name or "") .. "' (undo with Cmd+Z). Other REAPER tracks are untouched.", function()
+    C.clear_project() S.sel_track, S.sel_clip, S.edit_clip = nil, nil, nil A.new_project()
+  end, "Start new")
+end
+
 function A.new_project()
   local function go() A.safe(C.new_project, "Untitled") S.sel_track, S.sel_clip, S.edit_clip = nil, nil, nil end
   go()
@@ -265,9 +273,10 @@ local function draw_tabs(R)
   if S.tab == "roll" then
     local c = S.edit_clip and P.clip(S.edit_clip)
     if c then
-      G.text(string.format("%s  -  %s   (%d notes)   note length %.3g   snap %s", c.track.name, c.name ~= "" and c.name or "clip", #P.notes(c), S.roll.note_len, S.snap_label()), x + 16, tr[2] + 6, T.dim, 11, "l", tr[3] - x - 300)
+      local room = tr[3] - x - 40 - (tr[3] >= 1250 and 470 or 0)
+      G.text(string.format("%s  -  %s   (%d notes)   note length %.3g   snap %s", c.track.name, c.name ~= "" and c.name or "clip", #P.notes(c), S.roll.note_len, S.snap_label()), x + 16, tr[2] + 6, T.dim, 11, "l", math.max(60, room))
     end
-    G.text("LMB draw / drag  -  RMB delete  -  Shift-drag select  -  Q quantize  -  arrows move", tr[3] - 480, tr[2] + 6, T.faint, 11, "r", 470)
+    if tr[3] >= 1250 then G.text("LMB draw / drag  -  RMB delete  -  Shift-drag select  -  Q quantize  -  arrows move", tr[3] - 480, tr[2] + 6, T.faint, 11, "r", 470) end
   end
 end
 
@@ -301,7 +310,11 @@ local function draw_status(R)
   local nn = 0
   for _, c in ipairs(snap.clips) do if c.kind == "midi" then nn = nn + 1 end end
   local right = string.format("%d tracks  %d clips%s", #snap.tracks, #snap.clips, S.show_perf and string.format("   %.0f fps  %.1f ms", S.perf.fps, S.perf.frame_ms) or "")
-  G.text(right, s[3] - 330, s[2] + 5, T.dim, 11, "r", 320)
+  local docked = gfx.dock(-1) & 1 == 1
+  if G.button("dock", s[3] - 66, s[2] + 2, 60, 18, docked and "Undock" or "Dock", { size = 10, tip = "Dock this window into a REAPER docker (or drag its title bar onto one)" }) then
+    gfx.dock(docked and 0 or 257)
+  end
+  G.text(right, s[3] - 400, s[2] + 5, T.dim, 11, "r", 320)
 end
 
 local function handle_splitter(R)
@@ -340,8 +353,42 @@ function A.snapshot(path, step)
 end
 
 local DEBUG_DIR = os.getenv("DAW_DEBUG_DIR")
+local dbg_frame = 0
+-- GUI-test support: publish window geometry, widget rects and project counters so an external process can aim REAL
+-- OS-level input events at the window and verify the result. Enabled only when DAW_DEBUG_DIR is set.
+local function write_state()
+  local f = io.open(DEBUG_DIR .. "/state.txt.tmp", "w")
+  if not f then return end
+  local ox, oy = gfx.clienttoscreen(0, 0)
+  f:write(string.format("origin %.1f %.1f\nsize %.1f %.1f %.1f\ndock %d\nplaying %d\nmouse %.1f %.1f %d\n", ox, oy, G.W, G.H, G.K, gfx.dock(-1), r.GetPlayState(), G.m.x, G.m.y, G.m.down and 1 or 0))
+  local snap = P.snap
+  local notes = 0
+  for _, c in ipairs(snap.clips) do if c.kind == "midi" then notes = notes + #P.notes(c) end end
+  f:write(string.format("project %d %s\ntracks %d\nclips %d\nnotes %d\nbpm %.2f\nmodal %s\ntab %s\n", snap.has_root and 1 or 0, snap.name or "", #snap.tracks, #snap.clips, notes, snap.bpm,
+    G.modal and (G.modal.kind .. ":" .. (G.modal.title or "")) or "none", S.tab))
+  local lo, hi = TR.loop()
+  f:write(string.format("loop %.3f %.3f %d\nsel_clip %s\nundo %s\nredo %s\n", lo, hi, TR.loop_enabled() and 1 or 0, tostring(S.sel_clip), tostring(r.Undo_CanUndo2(0)), tostring(r.Undo_CanRedo2(0))))
+  for i, t in ipairs(snap.tracks) do
+    f:write(string.format("track %d %s|%s|vol=%.4f|pan=%.3f|mute=%d|solo=%d|fx=%d|clips=%d\n", i, t.name, t.kind, t.vol, t.pan, t.mute and 1 or 0, t.solo and 1 or 0, #t.fx, #t.clips))
+    for j, c in ipairs(t.clips) do f:write(string.format("clip %d.%d %s %.3f %.3f\n", i, j, c.kind, c.start, c.len)) end
+  end
+  for id, w in pairs(G.reg) do if #id < 40 then f:write(string.format("reg %s %.1f %.1f %.1f %.1f\n", id:gsub(" ", "_"), w[1], w[2], w[3], w[4])) end end
+  if A.R then
+    local R = A.R
+    f:write(string.format("rect lanes %.1f %.1f %.1f %.1f\nrect roll %.1f %.1f %.1f %.1f\nrect headers %.1f %.1f %.1f %.1f\nrect ruler %.1f %.1f %.1f %.1f\n",
+      R.arr_lanes[1], R.arr_lanes[2], R.arr_lanes[3], R.arr_lanes[4], R.roll_grid[1], R.roll_grid[2], R.roll_grid[3], R.roll_grid[4],
+      R.arr_headers[1], R.arr_headers[2], R.arr_headers[3], R.arr_headers[4], R.arr_ruler[1], R.arr_ruler[2], R.arr_ruler[3], R.arr_ruler[4]))
+    f:write(string.format("view %.4f %.3f %.3f %.3f\nrollview %.4f %.3f %.3f %.3f\nbottom_h %d\n", S.arr.view.x0, S.arr.view.ppb, S.arr.scroll_y, S.arr.track_h, S.roll.view.x0, S.roll.view.ppb, S.roll.pv.top, S.roll.pv.row_h, S.bottom_h))
+  end
+  f:close()
+  os.remove(DEBUG_DIR .. "/state.txt")
+  os.rename(DEBUG_DIR .. "/state.txt.tmp", DEBUG_DIR .. "/state.txt")
+end
+
 local function service_debug()
   if not DEBUG_DIR then return end
+  dbg_frame = dbg_frame + 1
+  if dbg_frame % 6 == 0 then pcall(write_state) end
   local f = io.open(DEBUG_DIR .. "/snap_request", "r")
   if f then
     local path = f:read("l") local step = tonumber(f:read("l") or "") or 2
@@ -436,6 +483,10 @@ function App.start(opts)
   A.running = true
   P.refresh(true)
   A.load_prefs()
+  if P.snap.has_root then
+    local fixed = A.safe(C.repair_project)
+    if fixed and fixed > 0 then A.msg("Re-linked " .. fixed .. " missing drum sample(s)", "warn") end
+  end
   r.atexit(function() if A.running then A.shutdown() end end)
   if not opts.headless then r.defer(loop) end
   return A

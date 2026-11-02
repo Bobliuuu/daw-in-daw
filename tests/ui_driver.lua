@@ -24,6 +24,7 @@ function D.start(opts)
   G.input_source = source
   A = App.start({ w = opts.w or 1280, h = opts.h or 800, no_singleton = true, headless = true })
   D.A, D.G = A, G
+  D.frames(2) -- first frames populate layout + widget registry
   return A
 end
 

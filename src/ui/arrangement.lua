@@ -100,6 +100,10 @@ local function draw_clip(A, c, t, row_y)
   G.frame(x0, y0, w, h, sel and { 255, 255, 255 } or col, sel and 1 or 0.9)
   if sel then G.frame(x0 + 1, y0 + 1, w - 2, h - 2, { 255, 255, 255 }, 0.5) end
   G.text(c.name ~= "" and c.name or (c.kind == "midi" and "MIDI" or "audio"), x0 + 4, y0 + 1, { 12, 12, 14 }, 11, "l", w - 6)
+  if c.offline then
+    G.rect(x0, body_y, w, body_h, { 120, 20, 20 }, 0.55)
+    G.text("OFFLINE - file missing", x0 + 6, body_y + body_h / 2 - 6, { 255, 200, 200 }, 11, "l", w - 8)
+  end
   if A.S.edit_clip == c.id then G.rect(x0, y0 + h - 3, w, 3, T.accent) end
 end
 
@@ -181,6 +185,12 @@ local function context_menu_track(A, t)
     { label = "Add effect: Reverb", fn = function() A.safe(C.add_effect, t.id, "reverb") end },
     { label = "Add effect: Delay", fn = function() A.safe(C.add_effect, t.id, "delay") end },
     { label = "Add effect: EQ", fn = function() A.safe(C.add_effect, t.id, "eq") end },
+    { label = "Color: next", fn = function()
+      local pal = { { 255, 99, 99 }, { 255, 170, 60 }, { 240, 220, 80 }, { 110, 210, 120 }, { 70, 200, 220 }, { 100, 140, 255 }, { 180, 120, 255 }, { 240, 110, 200 } }
+      local best, bd = 1, 1e9
+      for i, c in ipairs(pal) do local d = math.abs(c[1] - t.color[1]) + math.abs(c[2] - t.color[2]) + math.abs(c[3] - t.color[3]) if d < bd then best, bd = i, d end end
+      C.set_track_color(t.id, pal[best % #pal + 1])
+    end },
     { sep = true },
     { label = "Delete track...", fn = function()
       G.confirm("Delete track '" .. t.name .. "' and its clips?", function() C.delete_track(t.id) if A.S.sel_track == t.id then A.S.sel_track = nil end end, "Delete")
