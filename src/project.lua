@@ -154,7 +154,7 @@ function P.clip(id) return P.snap and P.snap.clip_by_id[id] end
 P.notes_cache = {}
 -- all notes of a MIDI clip in absolute project beats. cached per snapshot version.
 function P.notes(clip)
-  if not clip or not clip.take then return {} end
+  if not clip or not clip.take or not r.ValidatePtr2(0, clip.take, "MediaItem_Take*") then return {} end
   local c = P.notes_cache[clip.id]
   if c then return c end
   local take = clip.take

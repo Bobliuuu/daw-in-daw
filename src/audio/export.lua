@@ -51,7 +51,7 @@ function X.render(opts)
     r.GetSetProjectInfo(0, "RENDER_ENDPOS", H.qn_to_time(region.e), true)
   end
   local tail = opts.tail_ms or 1500
-  r.GetSetProjectInfo(0, "RENDER_TAILFLAG", tail > 0 and 1 or 0, true)
+  r.GetSetProjectInfo(0, "RENDER_TAILFLAG", tail > 0 and 15 or 0, true)  -- tail applies to every bounds type
   r.GetSetProjectInfo(0, "RENDER_TAILMS", tail, true)
   r.GetSetProjectInfo_String(0, "RENDER_FILE", dir, true)
   r.GetSetProjectInfo_String(0, "RENDER_PATTERN", base, true)

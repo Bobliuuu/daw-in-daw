@@ -13,6 +13,9 @@ C.assets_dir = H.script_dir() .. "/assets"
 
 local PALETTE = { { 255, 99, 99 }, { 255, 170, 60 }, { 240, 220, 80 }, { 110, 210, 120 }, { 70, 200, 220 }, { 100, 140, 255 }, { 180, 120, 255 }, { 240, 110, 200 } }
 
+-- MIDI API writes are invisible to REAPER's undo system unless the item is flagged dirty (verified empirically)
+local function mark(c) r.MarkTrackItemsDirty(c.track.ptr, c.ptr) r.UpdateItemInProject(c.ptr) end
+
 local function mutate(label, fn, ...)
   local a, b = H.run(label, fn, ...)
   P.touch()
@@ -34,8 +37,8 @@ end
 -- gestures for drags: many frames of edits => one undo point
 function C.begin_gesture(label) H.begin(label) end
 function C.end_gesture(label) H.finish(label) P.touch() P.refresh(true) end
-function C.undo() H.undo() P.touch() end
-function C.redo() H.redo() P.touch() end
+function C.undo() H.undo() P.touch() P.refresh(true) end
+function C.redo() H.redo() P.touch() P.refresh(true) end
 
 ----------------------------------------------------------------------------- project
 function C.new_project(name)
@@ -112,6 +115,20 @@ function C.set_mute(id, on)
 end
 function C.set_solo(id, on)
   return mutate("Solo", function() local _, tr = trk(id) r.SetMediaTrackInfo_Value(tr, "I_SOLO", on and 2 or 0) end)
+end
+
+function C.set_master_volume(lin) return mutate("Master volume", function() r.SetMediaTrackInfo_Value(r.GetMasterTrack(0), "D_VOL", U.clamp(lin, 0, 4)) end) end
+
+-- swap a ReaSynth instrument preset (instrument selection for synth tracks)
+function C.set_preset(id, preset)
+  return mutate("Instrument preset", function()
+    local t, tr = trk(id)
+    if t.kind ~= "midi" or t.inst == "Drum Kit" then return false end
+    for name, v in pairs(I.PRESETS[preset] or {}) do I.set_named(tr, 0, name, v) end
+    r.TrackFX_SetNamedConfigParm(tr, 0, "renamed_name", preset)
+    P.tset(tr, "inst", preset)
+    return true
+  end)
 end
 
 ----------------------------------------------------------------------------- clips
@@ -271,8 +288,6 @@ function C.rename_clip(id, name)
 end
 
 ----------------------------------------------------------------------------- notes
--- MIDI API writes are invisible to REAPER's undo system unless the item is flagged dirty (verified empirically)
-local function mark(c) r.MarkTrackItemsDirty(c.track.ptr, c.ptr) r.UpdateItemInProject(c.ptr) end
 local function clip_bounds(c) return c.start, c.start + c.len end
 
 function C.insert_note(clip_id, pitch, s, e, vel)

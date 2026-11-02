@@ -55,7 +55,8 @@ end
 
 -- piano roll vertical: pv = { top = highest visible pitch (float), row_h }
 function T.pitch_to_y(pv, pitch, ry) return (ry or 0) + (pv.top - pitch) * pv.row_h end
-function T.y_to_pitch(pv, y, ry) return math.floor(pv.top - (y - (ry or 0)) / pv.row_h) end
+-- row of pitch p spans y in [(top-p)*h, (top-p+1)*h)  =>  top - y/h lies in (p-1, p]  =>  ceil
+function T.y_to_pitch(pv, y, ry) return math.ceil(pv.top - (y - (ry or 0)) / pv.row_h) end
 function T.clamp_pitch_view(pv, view_h)
   local rows = view_h / pv.row_h
   pv.top = U.clamp(pv.top, math.min(127, rows - 1), 127)

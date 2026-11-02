@@ -187,9 +187,7 @@ local function build()
 end
 
 local function verify()
-  local t0 = r.time_precise()
-  local function go()
-    if r.CountTracks(0) == 0 and r.time_precise() - t0 < 12 then r.defer(go) return end
+  T.wait_until(12, function() return r.CountTracks(0) > 0 end, function()
     local man = {}
     for line in io.lines(OUT .. "/engine_manifest.txt") do local k, v = line:match("^(%w+)=(.*)$") man[k] = tonumber(v) end
     P.refresh(true)
@@ -212,8 +210,7 @@ local function verify()
       T.eq("re-export rms matches (+-3%)", res.analysis.rms, man.rms, man.rms * 0.03)
     end
     T.finish()
-  end
-  r.defer(go)
+  end)
 end
 
 T.run(function() if T.mode == "engine_build" then build() else verify() end end)

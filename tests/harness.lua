@@ -23,19 +23,35 @@ function T.finish(quit)
   local d = io.open(T.out .. "/DONE_" .. T.mode, "w") d:write(T.fails == 0 and "ok" or "FAIL") d:close()
   if quit ~= false then r.Main_OnCommand(40004, 0) end
 end
--- run fn in a deferred context with pcall so a crash is reported instead of hanging the runner
+-- NOTE: do not use coroutines in tests - REAPER array-argument APIs (audio accessors, peaks) silently fail inside them.
+-- run fn in a plain defer context; a crash is reported instead of hanging the runner.
 function T.run(fn)
   r.defer(function()
     local ok, err = xpcall(fn, debug.traceback)
     if not ok then T.check("TEST CRASHED", false, err) T.finish() end
   end)
 end
--- wait helper for multi-frame steps: poll(fn) is called each defer until it returns true or timeout
-function T.wait(secs, cond, done)
+local function guarded(fn, ...)
+  local ok, err = xpcall(fn, debug.traceback, ...)
+  if not ok then T.check("TEST CRASHED", false, err) T.finish() end
+end
+-- poll(secs, tick, done): call tick() every defer cycle for `secs` seconds (REAPER's main loop runs in between), then done()
+function T.poll(secs, tick, done)
   local t0 = r.time_precise()
   local function step()
-    if cond() or r.time_precise() - t0 > secs then done(cond()) return end
-    r.defer(step)
+    guarded(function()
+      if r.time_precise() - t0 < secs then if tick then tick() end r.defer(step) else done() end
+    end)
+  end
+  step()
+end
+-- wait_until(secs, cond, done(ok)): defer-poll until cond() is true or timeout
+function T.wait_until(secs, cond, done)
+  local t0 = r.time_precise()
+  local function step()
+    guarded(function()
+      if cond() then done(true) elseif r.time_precise() - t0 > secs then done(false) else r.defer(step) end
+    end)
   end
   step()
 end
