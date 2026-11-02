@@ -101,12 +101,14 @@ Measured by `tests/it_extra.lua` (16 tracks, 102 clips, 1,000 notes, 1280×800, 
 
 | scenario | UI work / frame (mean · p95) |
 |---|---|
-| idle | 1.5 ms · 1.7 ms |
-| dragging a clip (live REAPER edits + snapshot rebuild each frame) | 2.2 ms · 2.3 ms |
-| playback (meters + playhead + 16 tracks) | 2.5 ms · 5.8 ms |
+| idle | 1.5 ms · 1.8 ms |
+| dragging a clip (live REAPER edits + snapshot rebuild each frame) | 2.3 ms · 2.4 ms |
+| playback (meters + playhead + 16 tracks) | 3.7 ms · 8.1 ms |
 
-Frame *work* is ~15× under a 33 ms budget. The achieved cadence (21-22 Hz in the headless run) is set by REAPER's `defer`
-scheduler, not by the app; it was measured with REAPER in the background and was not re-measured with the window focused.
+Frame *work* is ~9-20× under a 33 ms budget. The achieved cadence is set by REAPER's `defer` scheduler, not by the app: the
+final run measured 34 fps idle / 33 fps during playback, while earlier runs of identical code measured 21-22 fps (REAPER was an
+unfocused background process in all of them; the cause of the variation was not investigated). It was never measured with a
+human-focused window.
 Techniques that keep frames cheap: cached snapshot, notes cached per snapshot version and drawn only when visible, waveform
 cache, no per-frame object scans, `PreventUIRefresh` around bulk edits.
 

@@ -71,9 +71,9 @@ environment, so `gui_test.sh` was written but **has not been run to completion**
 
 ## Performance (measured, not assumed)
 
-16 tracks · 102 clips · 1,000 MIDI notes, 1280×800: **UI work per frame 1.5 ms idle · 2.2 ms dragging a clip · 2.5 ms (p95 5.8 ms) during playback** (budget at 30 fps: 33 ms).
-The snapshot of the project is rebuilt only when REAPER's state counter changes or a command runs; the renderer never scans REAPER per frame.
-REAPER's `defer` scheduler delivered ~21–22 Hz in the headless run (REAPER unfocused) - see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#performance).
+16 tracks · 102 clips · 1,000 MIDI notes, 1280×800 (`tests/it_extra.lua`, final run): **UI work per frame - 1.5 ms idle · 2.3 ms while dragging a clip · 3.7 ms mean (p95 8.1 ms) during playback**; budget at 30 fps is 33 ms.
+The project snapshot is rebuilt only when REAPER's state counter changes or a command runs; the renderer never scans REAPER per frame.
+Achieved cadence is set by REAPER's `defer` scheduler: **33-34 fps** in the final run, **21-22 fps** in earlier headless runs (REAPER unfocused, same code) - so "≈30 fps" holds when REAPER schedules the timer normally; details in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#performance).
 
 ## Known limitations
 
