@@ -129,9 +129,22 @@ local function phase_robust()
   D.click_id("dock") D.frames(4)
   T.check("Undock button restores a floating window", gfx.dock(-1) & 1 == 0, gfx.dock(-1))
 
-  -- clean up the temporary project state
-  D.stop()
-  T.finish()
+  -- audition: clicking a piano-roll key / placing a note sends MIDI through REAPER's virtual keyboard to the track
+  local lead = P.snap.tracks[1]
+  TR.stop() r.SetEditCurPos(0, true, false)
+  A.audition(lead.id, 69, 110)
+  do local tt = P.track(lead.id) T.info(string.format("audition state: kind=%s inst=%s fxcount=%d arm=%d mon=%d in=%d mute=%d vol=%.2f playstate=%d audio_running=%s", tt.kind, tt.inst, #tt.fx, r.GetMediaTrackInfo_Value(tt.ptr, "I_RECARM"), r.GetMediaTrackInfo_Value(tt.ptr, "I_RECMON"), r.GetMediaTrackInfo_Value(tt.ptr, "I_RECINPUT"), r.GetMediaTrackInfo_Value(tt.ptr, "B_MUTE"), tt.vol, r.GetPlayState(), tostring(r.Audio_IsRunning()))) end
+  local maxpk = 0
+  T.poll(1.2, function()
+    D.frames(1)
+    local m = A.meter(lead.id) -- the app's meter service already consumed the peak this frame (Track_GetPeakInfo is read-and-reset)
+    maxpk = math.max(maxpk, m.l, m.r)
+  end, function()
+    T.check("audition produces audio on the track (real peak meter)", maxpk > 0.01, string.format("peak=%.3f", maxpk))
+    D.stop()
+    T.check("closing the app disarms audition arming", r.GetMediaTrackInfo_Value(P.track(lead.id).ptr, "I_RECARM") == 0)
+    T.finish()
+  end)
 end
 
 local SIZES = { { 640, 400 }, { 800, 520 }, { 1000, 640 }, { 1280, 800 }, { 1600, 900 }, { 1920, 1080 } }

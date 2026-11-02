@@ -29,6 +29,7 @@ run "engine reopen"  engine_verify  tests/it_engine.lua "$DAW_OUT/engine.rpp"
 rm -f "$DAW_OUT/neon_drive.rpp"
 run "UI workflow (song build)"  ui_build   tests/it_ui_flow.lua
 run "UI workflow (reopen+resume)" ui_verify  tests/it_ui_flow.lua "$DAW_OUT/neon_drive.rpp"
+run "shipped example project" example tests/it_example.lua "$ROOT/examples/neon_drive.rpp"
 run "robustness"     extra_robust   tests/it_extra.lua
 run "window sizes"   extra_sizes    tests/it_extra.lua
 run "performance"    extra_perf     tests/it_extra.lua
@@ -41,7 +42,7 @@ echo; echo "================ SUMMARY ================"; echo -e "$SUMMARY"
   echo "| Suite | Result |"; echo "|---|---|"
   echo -e "$SUMMARY" | grep '^==' | sed 's/^== \(.*\): \(.*\)$/| \1 | \2 |/'
   echo; echo "Overall: $([ $FAILED -eq 0 ] && echo PASS || echo FAIL)"; echo
-  for m in build verify engine_build engine_verify ui_build ui_verify extra_robust extra_sizes extra_perf; do
+  for m in build verify engine_build engine_verify ui_build ui_verify example extra_robust extra_sizes extra_perf; do
     echo "## $m"; echo '```'; cat "$DAW_OUT/result_$m.txt" 2>/dev/null; echo '```'; echo
   done
 } > docs/TEST_RESULTS.md

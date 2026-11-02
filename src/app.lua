@@ -49,22 +49,34 @@ local function update_meters()
 end
 
 ----------------------------------------------------------------------------- MIDI audition through the virtual keyboard
-local armed, pending_off = nil, {}
+local armed, pending_off, pending_on = nil, {}, {}
 local VKB_INPUT = 4096 + 62 * 32   -- MIDI input: Virtual MIDI Keyboard, all channels
 function A.audition(track_id, pitch, vel)
   local t = P.track(track_id)
   if not t or t.kind ~= "midi" or not r.ValidatePtr2(0, t.ptr, "MediaTrack*") then return end
-  if armed ~= track_id then
-    if armed then local o = P.track(armed) if o and r.ValidatePtr2(0, o.ptr, "MediaTrack*") then r.SetMediaTrackInfo_Value(o.ptr, "I_RECARM", 0) r.SetMediaTrackInfo_Value(o.ptr, "I_RECMON", 0) end end
+  -- REAPER may close an idle audio device (pref: "close device when stopped & inactive"); monitoring needs it open
+  if not r.Audio_IsRunning() then r.Audio_Init() end
+  -- never trust the cached flag: undo/redo restores track state and silently disarms the track
+  local live = r.GetMediaTrackInfo_Value(t.ptr, "I_RECARM") == 1 and r.GetMediaTrackInfo_Value(t.ptr, "I_RECMON") == 1
+    and r.GetMediaTrackInfo_Value(t.ptr, "I_RECINPUT") == VKB_INPUT
+  if armed ~= track_id or not live then
+    if armed and armed ~= track_id then local o = P.track(armed) if o and r.ValidatePtr2(0, o.ptr, "MediaTrack*") then r.SetMediaTrackInfo_Value(o.ptr, "I_RECARM", 0) r.SetMediaTrackInfo_Value(o.ptr, "I_RECMON", 0) end end
     r.SetMediaTrackInfo_Value(t.ptr, "I_RECINPUT", VKB_INPUT)
     r.SetMediaTrackInfo_Value(t.ptr, "I_RECARM", 1)
     r.SetMediaTrackInfo_Value(t.ptr, "I_RECMON", 1)
     armed = track_id
+    -- REAPER applies (re)arming asynchronously: a note sent in the same instant would be lost, so delay it a little
+    pending_on[#pending_on + 1] = { pitch = pitch, vel = vel or 100, t = G.now + 0.12 }
+    pending_off[#pending_off + 1] = { pitch = pitch, t = G.now + 0.12 + 0.25 }
+    return
   end
   r.StuffMIDIMessage(0, 0x90, pitch, vel or 100)
   pending_off[#pending_off + 1] = { pitch = pitch, t = G.now + 0.25 }
 end
 local function service_audition()
+  for i = #pending_on, 1, -1 do
+    if G.now >= pending_on[i].t then r.StuffMIDIMessage(0, 0x90, pending_on[i].pitch, pending_on[i].vel) table.remove(pending_on, i) end
+  end
   for i = #pending_off, 1, -1 do
     if G.now >= pending_off[i].t then r.StuffMIDIMessage(0, 0x80, pending_off[i].pitch, 0) table.remove(pending_off, i) end
   end
