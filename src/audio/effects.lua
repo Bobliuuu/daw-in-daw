@@ -20,6 +20,13 @@ E.CATALOG = {
 function E.by_id(id) for _, e in ipairs(E.CATALOG) do if e.id == id then return e end end end
 
 local function clean_name(n) return (n:gsub("^%a+i?: ", ""):gsub(" %(Cockos%)", "")) end
+-- original plugin name, even when the FX instance has been renamed (e.g. "Kick" is a ReaSamplOmatic5000)
+local function plugin_name(tr, fx)
+  local ok, n = r.TrackFX_GetNamedConfigParm(tr, fx, "fx_name")
+  if ok and n ~= "" then return n end
+  local _, gn = r.TrackFX_GetFXName(tr, fx, "")
+  return gn
+end
 
 function E.add(tr, id)
   local def = E.by_id(id)
@@ -34,7 +41,7 @@ end
 function E.chain(tr, inst_count)
   local out = {}
   for i = 0, r.TrackFX_GetCount(tr) - 1 do
-    local _, n = r.TrackFX_GetFXName(tr, i, "")
+    local n = plugin_name(tr, i)
     local _, rn = r.TrackFX_GetNamedConfigParm(tr, i, "renamed_name")
     out[#out + 1] = { idx = i, name = (rn and rn ~= "" and rn) or clean_name(n), plugin = clean_name(n),
       enabled = r.TrackFX_GetEnabled(tr, i), is_inst = i < (inst_count or 0) }
@@ -44,7 +51,7 @@ end
 
 -- parameters worth showing for an FX instance: validated names only
 function E.params(tr, fx, plugin_hint)
-  local _, n = r.TrackFX_GetFXName(tr, fx, "")
+  local n = plugin_name(tr, fx)
   local want
   for _, e in ipairs(E.CATALOG) do if n:find(e.plugin, 1, true) then want = e.params end end
   if not want and n:find("ReaSynth", 1, true) then want = { "Volume", "Attack", "Decay", "Sustain", "Release", "Saw mix", "Square mix", "Triangle mix" } end

@@ -65,6 +65,18 @@ local function build()
   T.check("resize audio shorter", C.resize_clip(ac, 8))
   T.check("move audio", C.move_clip(ac, 8))
   T.eq("audio now at beat 8", P.clip(ac).start, 8, 0.01)
+  -- other formats: generate with ffmpeg (dev tooling only) and see what REAPER's decoder accepts
+  for _, fmt in ipairs { "flac", "mp3", "ogg", "aiff" } do
+    local fpath = OUT .. "/fmt_test." .. fmt
+    os.remove(fpath)
+    os.execute(string.format('ffmpeg -loglevel error -y -i "%s" "%s" 2>/dev/null', loop, fpath))
+    if io.open(fpath, "rb") then
+      local ok, id = pcall(C.import_audio, aud, fpath, 40)
+      local c = ok and P.clip(id)
+      T.check("import ." .. fmt .. " (REAPER decodes it)", ok and c and c.len > 15 and c.len < 17, ok and (c and c.len or "no clip") or id)
+      if ok and id then C.delete_clip(id) end
+    else T.info("could not generate ." .. fmt .. " test file (ffmpeg missing?) - skipped") end
+  end
   local bad = pcall(C.import_audio, P.track(bass).id, loop, 0)
   T.check("audio import to MIDI track rejected", not bad)
   local bad2 = pcall(C.import_audio, aud, root .. "/README_missing.wav", 0)
@@ -97,6 +109,17 @@ local function build()
   C.remove_fx(mel, 1) T.eq("fx removed", r.TrackFX_GetCount(P.track(mel).ptr), 2)
   C.remove_fx(mel, 0) T.eq("instrument slot is protected", r.TrackFX_GetCount(P.track(mel).ptr), 2)
   C.add_effect(mel, "reverb") C.set_fx_param(mel, 2, E.params(P.track(mel).ptr, 2)[1].idx, 0.5)
+
+  -- instrument parameter inspection / adjustment (renamed instances must still be identified by their real plugin)
+  local ip = E.params(P.track(mel).ptr, 0)
+  T.check("instrument params inspectable (ReaSynth, renamed 'Lead Synth')", #ip >= 6 and ip[1].name == "Volume", #ip)
+  local vol = ip[1]
+  C.set_fx_param(mel, 0, vol.idx, 0.9)
+  T.eq("instrument parameter adjusted", E.params(P.track(mel).ptr, 0)[1].value, 0.9, 1e-4)
+  local kp = E.params(P.track(drums).ptr, 0)
+  T.check("drum voice params inspectable (RS5k, renamed 'Kick')", #kp >= 4 and kp[1].name == "Volume", #kp)
+  T.eq("chain reports the real plugin behind a renamed voice", P.track(drums).fx[1].plugin, "ReaSamplOmatic5000")
+  T.eq("chain keeps the friendly voice name", P.track(drums).fx[1].name, "Kick")
 
   -- tempo: clips keep musical positions
   local before_t = P.clip(d3).time_pos

@@ -352,6 +352,52 @@ function A.snapshot(path, step)
   return true
 end
 
+-- same readback as snapshot(), returned as a PPM string (used by the demo recorder to de-duplicate identical frames)
+function A.snapshot_str(step)
+  step = step or 1
+  local w, h = math.floor(gfx.w), math.floor(gfx.h)
+  local ow, oh = w // step, h // step
+  local out = { string.format("P6\n%d %d\n255\n", ow, oh) }
+  local char, getpixel, unpack = string.char, gfx.getpixel, table.unpack
+  local buf = {}
+  for y = 0, oh - 1 do
+    local n = 0
+    gfx.y = y * step
+    for x = 0, ow - 1 do
+      gfx.x = x * step
+      local rr, gg, bb = getpixel()
+      buf[n + 1], buf[n + 2], buf[n + 3] = rr * 255 + 0.5 // 1, gg * 255 + 0.5 // 1, bb * 255 + 0.5 // 1
+      n = n + 3
+    end
+    -- chunked string.char: far fewer allocations than one char() per channel
+    local parts = {}
+    for i = 1, n, 3000 do parts[#parts + 1] = char(unpack(buf, i, math.min(i + 2999, n))) end
+    out[#out + 1] = table.concat(parts)
+  end
+  return table.concat(out)
+end
+
+-- demo-only overlay: caption bar + visible mouse cursor (synthetic input has no OS cursor). Off in normal use.
+A.overlay = { caption = nil, cursor = false }
+local function draw_overlay()
+  local o, T = A.overlay, G.theme
+  if o.caption and o.caption ~= "" then
+    local size = 20
+    local w = G.text_w(o.caption, size) + 48
+    local x, y = (G.W - w) / 2, G.H - 86
+    G.rect(x + 3, y + 4, w, 46, { 0, 0, 0 }, 0.35)
+    G.rect(x, y, w, 46, { 14, 15, 18 }, 0.94) G.frame(x, y, w, 46, T.accent)
+    G.text(o.caption, x + 24, y + 12, { 255, 255, 255 }, size)
+  end
+  if o.cursor then
+    local m = G.m
+    local x, y = m.x, m.y
+    if m.down or m.rdown then G.rect(x - 11, y - 11, 22, 22, T.accent, 0.35) G.frame(x - 11, y - 11, 22, 22, T.accent) end
+    G.tri(x, y, x + 1, y + 17, x + 12, y + 12, { 0, 0, 0 })
+    G.tri(x + 1.5, y + 3, x + 2.5, y + 14, x + 10, y + 11, { 255, 255, 255 })
+  end
+end
+
 local DEBUG_DIR = os.getenv("DAW_DEBUG_DIR")
 local dbg_frame = 0
 -- GUI-test support: publish window geometry, widget rects and project counters so an external process can aim REAL
@@ -371,6 +417,12 @@ local function write_state()
   for i, t in ipairs(snap.tracks) do
     f:write(string.format("track %d %s|%s|vol=%.4f|pan=%.3f|mute=%d|solo=%d|fx=%d|clips=%d\n", i, t.name, t.kind, t.vol, t.pan, t.mute and 1 or 0, t.solo and 1 or 0, #t.fx, #t.clips))
     for j, c in ipairs(t.clips) do f:write(string.format("clip %d.%d %s %.3f %.3f\n", i, j, c.kind, c.start, c.len)) end
+  end
+  local ec = S.edit_clip and P.clip(S.edit_clip)
+  if ec and ec.kind == "midi" then
+    local ns = P.notes(ec)
+    f:write(string.format("editclip %s %.3f %.3f\n", ec.id, ec.start, ec.len))
+    for i = 1, math.min(#ns, 80) do f:write(string.format("n %d %.3f %.3f %d %d\n", ns[i].pitch, ns[i].s, ns[i].e, ns[i].vel, ns[i].sel and 1 or 0)) end
   end
   for id, w in pairs(G.reg) do if #id < 40 then f:write(string.format("reg %s %.1f %.1f %.1f %.1f\n", id:gsub(" ", "_"), w[1], w[2], w[3], w[4])) end end
   if A.R then
@@ -429,6 +481,7 @@ function A.step()
   end
   draw_status(R)
   G.end_frame()
+  if A.overlay.caption or A.overlay.cursor then draw_overlay() end
   service_debug()
   gfx.update()
   local dt = r.time_precise() - t0

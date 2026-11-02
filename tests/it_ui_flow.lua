@@ -48,7 +48,7 @@ end
 local function track_by_name(n) for _, t in ipairs(P.snap.tracks) do if t.name == n then return t end end end
 local function click_tab(name) D.click_id("tab_" .. name) end
 
-local build_part2
+local build_part2, build_part3
 local function build()
   D.start()
   A, P, C, S, G = D.A, require("project"), require("commands"), require("ui.state"), D.G
@@ -262,6 +262,18 @@ local function build()
   D.drag(slider[1] + 5, slider[2] + 10, slider[1] + slider[3] * 0.4, slider[2] + 10, 4) refresh()
   local wetafter = require("audio.effects").params(P.snap.tracks[3].ptr, 1)[1].value
   T.check("17 effect parameter edited with slider", math.abs(wetafter - wetbefore) > 0.05, string.format("%.3f -> %.3f", wetbefore, wetafter))
+  -- instrument (ReaSynth, renamed "Lead Synth"): select it in the chain and edit a synth parameter with a slider
+  D.click(A.R.content[1] + 80, A.R.content[2] + 32 + 11) D.frames(2)
+  local sawid, sawv
+  local E = require("audio.effects")
+  for _, p in ipairs(E.params(P.snap.tracks[3].ptr, 0)) do if p.name == "Saw mix" then sawid, sawv = p.idx, p.value end end
+  local sw = G.reg["fxp0_" .. tostring(sawid)]
+  T.check("17b instrument parameters listed in Devices tab", sw ~= nil)
+  if sw then
+    D.drag(sw[1] + 4, sw[2] + 10, sw[1] + sw[3] * 0.85, sw[2] + 10, 4) refresh()
+    local after = 0 for _, p in ipairs(E.params(P.snap.tracks[3].ptr, 0)) do if p.name == "Saw mix" then after = p.value end end
+    T.check("17c instrument parameter edited with slider (Saw mix)", after > sawv + 0.3, string.format("%.2f -> %.2f", sawv, after))
+  end
   D.click(100, A.R.arr_headers[2] + 1 * S.arr.track_h + 10) D.frames(2) -- bass track
   D.click_id("addfx") D.click_popup("Delay  (ReaDelay)") refresh()
   D.click(100, A.R.arr_headers[2] + 0 * S.arr.track_h + 10) D.frames(2) -- drums
@@ -299,6 +311,16 @@ build_part2 = function(TR, maxpos, wrapped)
   T.check("Space stops transport", not TR.is_playing())
   D.key("l") -- loop off
   T.check("L toggles loop off", not TR.loop_enabled())
+  -- meters must reflect reality: after stopping they decay to silence (no stale/fake values)
+  T.poll(2.5, function() D.frames(1) end, function() build_part3() end)
+end
+
+build_part3 = function()
+  local TR = require("audio.transport")
+  local mm = A.meter("master")
+  local ok_silent = mm.l < 0.02 and mm.r < 0.02
+  local tm = A.meter(P.snap.tracks[1].id)
+  T.check("meters decay to silence after stop (master + track)", ok_silent and tm.l < 0.02, string.format("master=%.3f/%.3f track=%.3f", mm.l, mm.r, tm.l))
 
   -- 20. undo / redo through keyboard on a structural change
   local nclips = #P.snap.tracks[1].clips
