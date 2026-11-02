@@ -1,4 +1,3 @@
-out/*.wav
-out/reaper_stdout*.txt
-*.rpp-bak
+out/
 .DS_Store
+*.rpp-bak
