@@ -1,0 +1,4 @@
+out/*.wav
+out/reaper_stdout*.txt
+*.rpp-bak
+.DS_Store

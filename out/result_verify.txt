@@ -1,0 +1,12 @@
+PASS  6 reopened: 2 tracks               tracks=2
+info  project=/Users/jhome/daw-in-reaper/out/test_project.rpp
+PASS  6 track present DAW Lead           
+PASS  6 ReaSynth kept DAW Lead           
+PASS  6 single clip DAW Lead             
+PASS  6 track present DAW Bass           
+PASS  6 ReaSynth kept DAW Bass           
+PASS  6 single clip DAW Bass             
+PASS  6 no duplicate tracks after setup  
+PASS  6 notes identical after reopen     12 vs 12 notes
+PASS  render (after reopen) audible      peak=0.800 len=4.00s 16bit sr=44100
+info  per-beat peaks: 0.69 0.49 0.73 0.60 0.80 0.70 0.79 0.78
