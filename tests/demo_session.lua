@@ -261,7 +261,7 @@ local function part_b()
   stages[#stages + 1] = { wav = "", t = total_t, beats = 0, playstart = true }
   local t0 = r.time_precise()
   local last = t0
-  T.poll(16.5, function()
+  T.poll(11.5, function()
     local now = r.time_precise()
     capture(now - last)
     last = now
