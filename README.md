@@ -1,114 +1,154 @@
-# DAW in DAW
+<div align="center">
 
-**A complete multitrack DAW, written in pure Lua, running inside [REAPER](https://www.reaper.fm).**
-Think "Neovim inside Neovim": REAPER supplies the host primitives (audio engine, MIDI, file I/O, undo, render, save format);
-this project supplies the *application* - its own arrangement view, piano roll, mixer, effects rack, transport, file browser,
-export dialog, keyboard shortcuts and undo/redo workflow - drawn with REAPER's built-in `gfx` API. You can make, save and export a
-song without touching REAPER's normal editors.
+<img src="assets/hero.svg" alt="DAW in DAW" width="100%">
 
-![the inner DAW, playing a finished song](docs/screenshots/08-playing-loop.png)
+# 🎛️ DAW in DAW
 
-▶ **Demo (59 s, recorded from the app's own framebuffer; audio is real renders of the project):** [`docs/demo/daw-in-daw-demo.mp4`](docs/demo/daw-in-daw-demo.mp4)
-🎧 **The song that was made with it:** [`docs/demo/neon_drive_export.wav`](docs/demo/neon_drive_export.wav) &nbsp;·&nbsp; project: [`examples/neon_drive.rpp`](examples/neon_drive.rpp)
+**A complete multitrack DAW, written in pure Lua, running inside REAPER**
 
-## What makes it different from "a REAPER plugin"
+![tests: 598 checks pass](https://img.shields.io/badge/tests-598%20checks%20pass-3ddc97) ![language: pure Lua](https://img.shields.io/badge/language-pure%20Lua-000080?logo=lua&logoColor=white) ![host: REAPER 7.39](https://img.shields.io/badge/host-REAPER%207.39-333333) ![dependencies: none](https://img.shields.io/badge/dependencies-none-4aa8ff) [![release: v0.1.0](https://img.shields.io/badge/release-v0.1.0-ff9d3d)](https://github.com/Bobliuuu/daw-in-daw/releases/tag/v0.1.0) [![license: MIT](https://img.shields.io/badge/license-MIT-f2c14e)](LICENSE)
 
-* **One project, two interfaces.** The inner DAW does not keep a second model or a second audio engine. Every track, clip, note,
-  fader and effect *is* a REAPER object. Open the same `.rpp` in REAPER's normal UI and you see ordinary tracks, items, MIDI
-  notes and FX chains. Edits from either side show up in the other.
-* **No dependencies.** Lua ReaScript + `gfx` only. No ReaImGui, SWS, JS_ReaScriptAPI, Python, Node, or external processes.
-  Copy the folder, run `daw.lua`.
-* **Owns the editing experience.** Its own toolkit (clip-rect stack, hit testing, mouse capture, popups, modal dialogs, text
-  prompts, sliders, scrollbars) renders every pixel; REAPER only sees tracks and media items.
+[🎬 Video](#video) · [🚀 Quick start](#quick-start) · [🧩 How it works](#how-it-works) · [✨ Features](#features) · [✅ Tests](#tests) · [⏱️ Performance](#performance) · [🖼️ Screenshots](#screenshots) · [⚠️ Limitations](#caveats) · [🗺️ Repo map](#repo-map)
 
-## Quick start
+</div>
+
+---
+
+**Explainer video (voice-over and captions): the idea, how it works, what is tested, and what is not**
+
+[![Explainer video preview (click for the mp4)](video/preview.gif)](video/daw_in_daw_explainer.mp4)
+
+<a id="video"></a>
+Think "Neovim inside Neovim": REAPER supplies the host primitives (audio engine, MIDI, file I/O, undo, render, save format); this project supplies the **application**: its own arrangement view, piano roll, mixer,
+effects rack, transport, file browser, export dialog, keyboard shortcuts and undo/redo workflow, drawn with REAPER's built-in `gfx` API. You can make, save and export a song without touching REAPER's normal editors.
+It is about 3,597 lines of Lua in 22 files, with no dependencies beyond ReaScript and `gfx`.
+
+<p align="center"><img src="docs/screenshots/08-playing-loop.png" alt="the inner DAW, playing a finished song" width="860"></p>
+
+▶ **Recorded demo (from the app's own framebuffer; audio is real renders of the project):** [`docs/demo/daw-in-daw-demo.mp4`](docs/demo/daw-in-daw-demo.mp4)
+· 🎧 **The song made with it:** [`docs/demo/neon_drive_export.wav`](docs/demo/neon_drive_export.wav) (18 s), project [`examples/neon_drive.rpp`](examples/neon_drive.rpp)
+
+<a id="quick-start"></a>
+
+## 🚀 Quick start
 
 ```bash
 git clone https://github.com/Bobliuuu/daw-in-daw && cd daw-in-daw
 ./run.sh                         # launches REAPER and runs daw.lua   (macOS: /Applications/REAPER.app)
 ./run.sh examples/neon_drive.rpp # ...with the example song loaded
 ```
-or inside REAPER: *Actions → Show action list → New action → Load ReaScript… → `daw.lua`* (run it again to close it).
-`tools/install_action.sh` registers it as a named action. The window is a normal `gfx` window: dock it with the **Dock** button
-(bottom-right, tested); REAPER's own docker also hosts script windows. Developed and tested on **REAPER 7.39, macOS 26, Apple Silicon** (older 6.x/7.x builds are untested).
+Or inside REAPER: *Actions, Show action list, New action, Load ReaScript, `daw.lua`* (run it again to close it). `tools/install_action.sh` registers it as a named action.
+Developed and tested on **REAPER 7.39, macOS 26, Apple Silicon** (older 6.x/7.x builds are untested).
 
-## Features
+<a id="how-it-works"></a>
 
-| Area | What works (all of it drives real REAPER state) |
+## 🧩 How it works
+
+* **One project, two interfaces.** Every track, clip, note, fader and effect *is* a REAPER object; open the same `.rpp` in REAPER's normal UI and you see ordinary tracks, items, MIDI notes and FX chains.
+* **No dependencies.** Lua ReaScript + `gfx` only.
+* **Owns the editing experience.** Its own toolkit (clip-rect stack, hit testing, mouse capture, popups, modal dialogs, sliders, scrollbars) renders every pixel.
+
+<p align="center"><img src="assets/flow.svg" alt="The inner DAW is a view over REAPER's own project" width="100%"></p>
+
+<a id="features"></a>
+
+## ✨ Features
+
+| Area | What works |
 |---|---|
-| **Project** | New project (one owned folder track; your other tracks are never touched), rename, save / save-as (own dialog), reopen & resume, schema-versioned metadata in project ext-state, stable GUID ids, UI prefs persisted |
-| **Tracks** | MIDI and audio tracks; instruments: Lead / Bass / Pad / Pluck presets (ReaSynth) and a **6-voice Drum Kit** (ReaSamplOmatic5000 with *procedurally generated original samples*, auto re-linked if files go missing); colour, name, M/S, volume, pan, meters, delete (with confirmation) |
-| **Arrangement** | Ruler with bars/beats, loop strip, 16+ bars, zoom/scroll both axes, clip move (across tracks) / resize / audio left-trim by dragging, double-click to create or open, duplicate, copy/cut/paste, split, delete, snap, real waveforms, playhead, loop region |
-| **Piano roll** | Draw (click or drag-to-length), move, resize, pitch edit, velocity lane, marquee select (native selection flag), delete, arrow-key transpose/nudge, quantize, snap grid, zoom/scroll, out-of-clip shading, key audition via REAPER's virtual MIDI keyboard (tested: real audio on the track meter) |
-| **Audio** | Import WAV / FLAC / MP3 / OGG / AIFF (all verified to decode in REAPER 7.39) via an in-app file browser; trim, move, duplicate, split; offline files are flagged |
-| **Mixer** | Faders, pan, M/S, real peak meters (decay to silence when stopped), FX slots with bypass, master strip |
-| **Effects** | Reverb (ReaVerbate), Delay (ReaDelay), EQ (ReaEQ), Compressor (ReaComp): add, remove, bypass, reorder, parameter sliders; instrument parameters too. Parameter indices are looked up **by name at runtime**, never hard-coded |
-| **Transport** | Play / pause / stop / seek (REAPER's native transport), loop, tempo, time-signature, bar.beat.tick + time readout |
-| **Undo / redo** | Native REAPER undo; every command is one undo point; a 100-frame drag is exactly **one** entry |
-| **Export** | Own dialog: folder, name, whole project or loop region; REAPER's renderer; result **analysed** (duration, peak, RMS, format); never overwrites; render settings restored afterwards |
+| **Project** | new / rename / save / save-as / reopen and resume; schema-versioned metadata; your other tracks are never touched |
+| **Tracks** | MIDI and audio tracks; Lead / Bass / Pad / Pluck presets (ReaSynth) and a 6-voice Drum Kit (ReaSamplOmatic5000, procedurally generated original samples) |
+| **Arrangement** | ruler, loop strip, zoom/scroll, clip move/resize/trim, duplicate, copy/cut/paste, split, snap, real waveforms |
+| **Piano roll** | draw, move, resize, pitch edit, velocity lane, marquee select, quantize, snap grid, key audition |
+| **Audio** | import WAV / FLAC / MP3 / OGG / AIFF via an in-app file browser |
+| **Mixer / Effects** | faders, pan, M/S, peak meters, FX slots; Reverb, Delay, EQ, Compressor |
+| **Transport / Undo** | REAPER's native transport; every command is one undo point (a 100-frame drag is one entry) |
+| **Export** | own dialog, REAPER's renderer, result analysed (duration, peak, RMS), never overwrites |
 
-### Keyboard & mouse (⌘ = Cmd on macOS, Ctrl elsewhere - taken from REAPER's modifier bits)
+Full keyboard and mouse reference: [docs/README_FULL.md](docs/README_FULL.md).
 
-| | |
-|---|---|
-| `Space` play / stop · `Home` start · `L` loop · `Esc` deselect | `⌘Z` undo · `⇧⌘Z` / `⌘Y` redo · `⌘S` save · `⌘E` export · `⌘I` import · `⌘T` add track |
-| `⌘D` duplicate clip · `⌘C/X/V` copy/cut/paste · `S` split at playhead · `Del` delete · `M` / `⇧S` mute / solo | `1` `2` `3` piano roll / mixer / devices · `+` `-` zoom · `[` `]` snap |
-| **Arrangement:** double-click lane = new 1-bar clip · double-click clip = open · drag body/edges · right-click menus · drag the strip above the ruler = loop · click ruler = seek | **Piano roll:** click or drag = draw note · drag = move · drag right edge = resize · right-click = delete · `⇧`-drag = select · `⌘A` · `↑↓` transpose (`⇧` octave) · `←→` nudge · `Q` quantize |
-| Wheel scrolls · `⇧`+wheel horizontal · `⌘`/`Alt`+wheel zoom | Roll: wheel = pitch scroll · `Alt`+wheel = row height |
+<a id="tests"></a>
 
-## Tests - 598 automated checks, all green
+## ✅ Tests
 
 ```bash
-lua tests/unit.lua            # 354 pure-Lua unit tests, no REAPER needed
-tools/run_all_tests.sh        # everything, incl. 244 integration checks inside real REAPER  ->  docs/TEST_RESULTS.md
-tools/gui/gui_test.sh         # REAL OS mouse/keyboard events (needs macOS Accessibility permission, see docs/TESTING.md)
+lua tests/unit.lua            # pure-Lua unit tests, no REAPER needed
+tools/run_all_tests.sh        # everything, incl. integration checks inside real REAPER  ->  docs/TEST_RESULTS.md
 ```
-See [docs/TESTING.md](docs/TESTING.md) and the generated [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md). The original go/no-go prototype
-checks (`tests/legacy/`) still pass. **Honest status of GUI testing:** the full song workflow (project → tracks → notes → arrangement → audio → mix → FX → loop/play → undo → save → export → reopen → resume), drags, keys, dialogs,
-docking and window resizing are exercised through the app's real frame loop with synthetic input, and the rendered framebuffer
-is inspected (screenshots below). Posting *OS-level* events needs a macOS permission that was not available in the build
-environment, so `gui_test.sh` was written but **has not been run to completion** - it refuses to report success when events are dropped.
+The table is read from the generated [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md) (REAPER 7.39 on macOS). **GUI testing status:** the full song workflow is exercised through the app's real frame loop with synthetic input and the rendered framebuffer is inspected (screenshots below).
+Posting *OS-level* mouse and keyboard events needs a macOS Accessibility permission that was not available, so `tools/gui/gui_test.sh` has **not been run to completion**; it refuses to report success when events are dropped. See [docs/TESTING.md](docs/TESTING.md).
 
-## Performance (measured, not assumed)
+| Checks passing | Failures | Pure-Lua unit tests |
+|:---:|:---:|:---:|
+| **598** | **0** | **354** |
 
-16 tracks · 102 clips · 1,000 MIDI notes, 1280×800 (`tests/it_extra.lua`, final run): **UI work per frame - 1.5 ms idle · 2.3 ms while dragging a clip · 3.7 ms mean (p95 8.1 ms) during playback**; budget at 30 fps is 33 ms.
-The project snapshot is rebuilt only when REAPER's state counter changes or a command runs; the renderer never scans REAPER per frame.
-Achieved cadence is set by REAPER's `defer` scheduler: **33-34 fps** in the final run, **21-22 fps** in earlier headless runs (REAPER unfocused, same code) - so "≈30 fps" holds when REAPER schedules the timer normally; details in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#performance).
+**Test suites (docs/TEST_RESULTS.md, generated by tools/run_all_tests.sh)**
 
-## Known limitations
+| Suite | Passed | Failed |
+| :--- | ---: | ---: |
+| unit: unit tests | 354 | 0 |
+| legacy prototype build | 14 | 0 |
+| legacy prototype reopen | 10 | 0 |
+| engine_build | 76 | 0 |
+| engine_verify | 12 | 0 |
+| ui_build | 65 | 0 |
+| ui_verify | 11 | 0 |
+| example | 8 | 0 |
+| extra_robust | 30 | 0 |
+| extra_sizes | 12 | 0 |
+| extra_perf | 6 | 0 |
 
-* Developed and tested on **macOS 26 / REAPER 7.39 / Apple Silicon** only. Windows/Linux are untested (file listing uses REAPER APIs, but directory creation shells out to `mkdir -p`; modifier handling is written for Ctrl but unverified).
-* OS-level GUI automation (`tools/gui/gui_test.sh`) not executed here - see above. Docking by hand-dragging the window onto a docker is not automated; the **Dock** button is tested.
-* Single tempo/time-signature at the project start (changing tempo keeps clips musically in place because items use REAPER's *beats* timebase); no tempo map editing, no automation lanes, no audio recording, no MIDI-device input (audition goes through REAPER's virtual keyboard), no time-stretch, no track-reorder UI (external reordering is handled).
-* MIDI clips: right-edge resize only (extends the source); overlapping clips are refused rather than layered.
-* Export is REAPER's *master mix* - any non-DAW tracks in the same project are included. Edits made outside undo points revert on undo (REAPER semantics).
-* `GetMediaItemTake_Peaks` returns nothing through the Lua binding on 7.39, so waveforms are decoded through a take audio accessor at a reduced rate (still real audio data, cached per zoom).
-* `gfx` text is single-font Arial without unicode/emoji.
+<sub>Source: `results/derived/readme_data.json`</sub>
 
-## Repository layout
+<p align="center"><img src="assets/suites.svg" alt="Checks passed per suite" width="100%"></p>
 
-```
-daw.lua                 entry point (run this)
-src/app.lua             frame loop, input dispatch, shortcuts, dialogs wiring
-src/project.lua         read-model of the REAPER project: ownership, GUID ids, cached snapshot
-src/commands.lua        every edit, one undo point each (+ gestures for drags)
-src/host.lua            REAPER adapter: time map, undo gestures, pointer validation
-src/timeline.lua        pure musical-time <-> pixel geometry        src/util.lua   pure helpers
-src/audio/              instruments, effects, transport, export, drum-sample generator
-src/ui/                 gx toolkit, layout, arrangement, piano roll, mixer, devices, transport bar, browser/dialogs
-tests/                  unit + in-REAPER integration + UI-driver + legacy prototype      tools/   runners, demo recorder, GUI test
-examples/               neon_drive.rpp (the demo song) + demo_loop.wav      docs/   architecture, testing, article outline, screenshots, demo
-```
+<a id="performance"></a>
 
-More: [Architecture](docs/ARCHITECTURE.md) · [Testing](docs/TESTING.md) · [Blog post outline](docs/ARTICLE_OUTLINE.md) · [Demo script](docs/DEMO.md)
+## ⏱️ Performance
 
-## Screenshots
+16 tracks, 102 clips and 1,000 MIDI notes at 1280x800. Playback cadence in the recorded run: 33 fps (REAPER's `defer` scheduler sets the cadence). Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+| Idle, mean per frame | Dragging a clip | Playback, p95 |
+|:---:|:---:|:---:|
+| **1.5 ms** | **2.3 ms** | **8.1 ms** |
+
+<p align="center"><img src="assets/perf.svg" alt="UI work per frame (ms, lower is better)" width="100%"></p>
+
+<a id="screenshots"></a>
+
+## 🖼️ Screenshots
 
 | | |
 |---|---|
 | ![](docs/screenshots/03-arrangement-duplicate.png) arrangement | ![](docs/screenshots/02-piano-roll-drums.png) piano roll (drum kit) |
 | ![](docs/screenshots/06-mixer.png) mixer | ![](docs/screenshots/07-devices-effects.png) devices / effects |
 | ![](docs/screenshots/09-export-dialog.png) export | ![](docs/screenshots/05-import-browser.png) audio import browser |
-| ![](docs/screenshots/13-small-window-800x520.png) 800×520 | ![](docs/screenshots/14-large-window-1920x1080.png) 1920×1080 |
 
-License: MIT.
+<a id="caveats"></a>
+
+## ⚠️ Honest caveats
+
+- Developed and tested on **macOS 26 / REAPER 7.39 / Apple Silicon** only. Windows and Linux are untested.
+- OS-level GUI automation (`tools/gui/gui_test.sh`) was not run to completion (needs a macOS Accessibility permission). The Dock button is tested; hand-dragging onto a docker is not automated.
+- Single tempo and time signature at the project start; no tempo map editing, no automation lanes, no audio recording, no MIDI-device input.
+- MIDI clips: right-edge resize only; overlapping clips are refused rather than layered. Export is REAPER's master mix, so non-DAW tracks in the same project are included.
+- `gfx` text is single-font Arial without unicode or emoji.
+
+<a id="repo-map"></a>
+
+## 🗺️ Repo map
+
+| Path | What it is |
+|---|---|
+| `daw.lua` | entry point (run this) |
+| `src/` | app, project read-model, commands, host adapter, timeline, audio (instruments, effects, export) and ui (toolkit, arrangement, piano roll, mixer) |
+| `tests/` | unit, in-REAPER integration, UI-driver and legacy prototype tests |
+| `tools/` | runners, demo recorder, GUI test, readme_data.py |
+| `examples/` | neon_drive.rpp (the demo song) and demo_loop.wav |
+| `docs/` | architecture, testing, TEST_RESULTS.md, screenshots, recorded demo, README_FULL.md (the earlier long README) |
+| `README.spec.yml` | spec for video-readme-maker |
+| `video/` | explainer mp4, srt, poster, preview.gif (generated) |
+
+---
+
+<div align="center"><sub>Generated with video-readme-maker from README.spec.yml and docs/TEST_RESULTS.md.</sub></div>

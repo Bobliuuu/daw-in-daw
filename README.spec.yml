@@ -14,8 +14,8 @@ readme_out: README.md
 assets_dir: assets
 badges:
   - {label: tests, message: "{{ n.total.text }} checks pass", color: 3ddc97}
-  - {label: language, message: "pure Lua", color: 000080, logo: lua}
-  - {label: host, message: "REAPER 7.39", color: 333333}
+  - {label: language, message: "pure Lua", color: "000080", logo: lua}
+  - {label: host, message: "REAPER 7.39", color: "333333"}
   - {label: dependencies, message: "none", color: 4aa8ff}
   - {label: release, message: "v0.1.0", color: ff9d3d, link: "https://github.com/Bobliuuu/daw-in-daw/releases/tag/v0.1.0"}
   - {label: license, message: MIT, color: f2c14e, link: LICENSE}
