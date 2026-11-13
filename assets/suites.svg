@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 646" width="980" height="646" role="img" aria-label="Checks passed per suite">
+<rect width="980" height="646" rx="16" fill="#0b0f17"/>
+<text x="32" y="44" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-weight="700" font-size="22" fill="#e6edf6">Checks passed per suite</text>
+<text x="32" y="68" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" fill="#8a98ad">docs/TEST_RESULTS.md</text>
+<text x="225" y="118" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#8a98ad" font-weight="400">unit: unit tests</text>
+<rect x="239" y="96" width="591.0" height="30" rx="6" fill="#263044"/>
+<text x="840.0" y="117" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e6edf6">354</text>
+<text x="225" y="164" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#8a98ad" font-weight="400">legacy prototype build</text>
+<rect x="239" y="142" width="23.4" height="30" rx="6" fill="#263044"/>
+<text x="272.4" y="163" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e6edf6">14</text>
+<text x="225" y="210" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#8a98ad" font-weight="400">legacy prototype reopen</text>
+<rect x="239" y="188" width="16.7" height="30" rx="6" fill="#263044"/>
+<text x="265.7" y="209" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e6edf6">10</text>
+<text x="225" y="256" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#8a98ad" font-weight="400">engine_build</text>
+<rect x="239" y="234" width="126.9" height="30" rx="6" fill="#263044"/>
+<text x="375.9" y="255" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e6edf6">76</text>
+<text x="225" y="302" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#8a98ad" font-weight="400">engine_verify</text>
+<rect x="239" y="280" width="20.0" height="30" rx="6" fill="#263044"/>
+<text x="269.0" y="301" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e6edf6">12</text>
+<text x="225" y="348" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#8a98ad" font-weight="400">ui_build</text>
+<rect x="239" y="326" width="108.5" height="30" rx="6" fill="#263044"/>
+<text x="357.5" y="347" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e6edf6">65</text>
+<text x="225" y="394" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#8a98ad" font-weight="400">ui_verify</text>
+<rect x="239" y="372" width="18.4" height="30" rx="6" fill="#263044"/>
+<text x="267.4" y="393" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e6edf6">11</text>
+<text x="225" y="440" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#8a98ad" font-weight="400">example</text>
+<rect x="239" y="418" width="13.4" height="30" rx="6" fill="#263044"/>
+<text x="262.4" y="439" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e6edf6">8</text>
+<text x="225" y="486" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#8a98ad" font-weight="400">extra_robust</text>
+<rect x="239" y="464" width="50.1" height="30" rx="6" fill="#263044"/>
+<text x="299.1" y="485" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e6edf6">30</text>
+<text x="225" y="532" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#8a98ad" font-weight="400">extra_sizes</text>
+<rect x="239" y="510" width="20.0" height="30" rx="6" fill="#263044"/>
+<text x="269.0" y="531" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e6edf6">12</text>
+<text x="225" y="578" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#8a98ad" font-weight="400">extra_perf</text>
+<rect x="239" y="556" width="10.0" height="30" rx="6" fill="#263044"/>
+<text x="259.0" y="577" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e6edf6">6</text>
+<text x="948" y="632" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#8a98ad">source: results/derived/readme_data.json · higher is better</text>
+</svg>

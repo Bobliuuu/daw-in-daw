@@ -1,0 +1,139 @@
+{
+ "suites": [
+  {
+   "suite": "unit: unit tests",
+   "passed": 354,
+   "failed": 0
+  },
+  {
+   "suite": "legacy prototype build",
+   "passed": 14,
+   "failed": 0
+  },
+  {
+   "suite": "legacy prototype reopen",
+   "passed": 10,
+   "failed": 0
+  },
+  {
+   "suite": "engine_build",
+   "passed": 76,
+   "failed": 0
+  },
+  {
+   "suite": "engine_verify",
+   "passed": 12,
+   "failed": 0
+  },
+  {
+   "suite": "ui_build",
+   "passed": 65,
+   "failed": 0
+  },
+  {
+   "suite": "ui_verify",
+   "passed": 11,
+   "failed": 0
+  },
+  {
+   "suite": "example",
+   "passed": 8,
+   "failed": 0
+  },
+  {
+   "suite": "extra_robust",
+   "passed": 30,
+   "failed": 0
+  },
+  {
+   "suite": "extra_sizes",
+   "passed": 12,
+   "failed": 0
+  },
+  {
+   "suite": "extra_perf",
+   "passed": 6,
+   "failed": 0
+  }
+ ],
+ "total_passed": 598,
+ "total_failed": 0,
+ "suite_count": 11,
+ "unit_passed": 354,
+ "integration_passed": 244,
+ "overall_pass": true,
+ "reaper": "7.39.0",
+ "perf": {
+  "idle": {
+   "mean_ms": 1.5,
+   "p95_ms": 1.8
+  },
+  "drag": {
+   "mean_ms": 2.3,
+   "p95_ms": 2.4
+  },
+  "playback": {
+   "mean_ms": 3.7,
+   "p95_ms": 8.1
+  }
+ },
+ "perf_rows": [
+  {
+   "case": "idle",
+   "mean_ms": 1.5,
+   "p95_ms": 1.8
+  },
+  {
+   "case": "dragging a clip",
+   "mean_ms": 2.3,
+   "p95_ms": 2.4
+  },
+  {
+   "case": "playback",
+   "mean_ms": 3.7,
+   "p95_ms": 8.1
+  }
+ ],
+ "perf_chart": [
+  {
+   "case": "idle",
+   "stat": "mean",
+   "ms": 1.5
+  },
+  {
+   "case": "idle",
+   "stat": "p95",
+   "ms": 1.8
+  },
+  {
+   "case": "dragging a clip",
+   "stat": "mean",
+   "ms": 2.3
+  },
+  {
+   "case": "dragging a clip",
+   "stat": "p95",
+   "ms": 2.4
+  },
+  {
+   "case": "playback",
+   "stat": "mean",
+   "ms": 3.7
+  },
+  {
+   "case": "playback",
+   "stat": "p95",
+   "ms": 8.1
+  }
+ ],
+ "bench": {
+  "tracks": 16,
+  "clips": 102,
+  "notes": 1000
+ },
+ "playback_fps": 33.3,
+ "src_lines": 3597,
+ "src_files": 22,
+ "song_seconds": 18,
+ "shots": 15
+}

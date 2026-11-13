@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 460" width="980" height="460" role="img" aria-label="UI work per frame (ms, lower is better)">
+<rect width="980" height="460" rx="16" fill="#0b0f17"/>
+<text x="32" y="44" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-weight="700" font-size="22" fill="#e6edf6">UI work per frame (ms, lower is better)</text>
+<text x="32" y="68" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" fill="#8a98ad">16 tracks, 102 clips, 1,000 notes, 1280x800; 30 fps budget is 33 ms (docs/TEST_RESULTS.md)</text>
+<line x1="70" x2="950" y1="372" y2="372" stroke="#263044"/><text x="60" y="376" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#8a98ad">0</text>
+<line x1="70" x2="950" y1="304" y2="304" stroke="#263044"/><text x="60" y="308" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#8a98ad">2.5</text>
+<line x1="70" x2="950" y1="236" y2="236" stroke="#263044"/><text x="60" y="240" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#8a98ad">5</text>
+<line x1="70" x2="950" y1="168" y2="168" stroke="#263044"/><text x="60" y="172" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#8a98ad">7.5</text>
+<line x1="70" x2="950" y1="100" y2="100" stroke="#263044"/><text x="60" y="104" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#8a98ad">10</text>
+<rect x="182.7" y="331.2" width="31.0" height="40.8" rx="4" fill="#ff9d3d"/>
+<text x="198.2" y="325.2" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#e6edf6">1.5</text>
+<rect x="216.7" y="323.0" width="31.0" height="49.0" rx="4" fill="#4aa8ff"/>
+<text x="232.2" y="317.0" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#e6edf6">1.8</text>
+<text x="217" y="394" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="14" fill="#e6edf6">idle</text>
+<rect x="476.0" y="309.4" width="31.0" height="62.6" rx="4" fill="#ff9d3d"/>
+<text x="491.5" y="303.4" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#e6edf6">2.3</text>
+<rect x="510.0" y="306.7" width="31.0" height="65.3" rx="4" fill="#4aa8ff"/>
+<text x="525.5" y="300.7" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#e6edf6">2.4</text>
+<text x="510" y="394" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="14" fill="#e6edf6">dragging a clip</text>
+<rect x="769.3" y="271.4" width="31.0" height="100.6" rx="4" fill="#ff9d3d"/>
+<text x="784.8" y="265.4" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#e6edf6">3.7</text>
+<rect x="803.3" y="151.7" width="31.0" height="220.3" rx="4" fill="#4aa8ff"/>
+<text x="818.8" y="145.7" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#e6edf6">8.1</text>
+<text x="803" y="394" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="14" fill="#e6edf6">playback</text>
+<rect x="70" y="416" width="14" height="14" rx="3" fill="#ff9d3d"/><text x="90" y="428" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="13" fill="#8a98ad">mean</text>
+<rect x="144.0" y="416" width="14" height="14" rx="3" fill="#4aa8ff"/><text x="164.0" y="428" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="13" fill="#8a98ad">p95</text>
+<text x="948" y="446" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#8a98ad">source: results/derived/readme_data.json · lower is better</text>
+</svg>
